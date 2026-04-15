@@ -107,7 +107,7 @@ function CheckSlider({ check, value, onChange }) {
   );
 }
 
-const GEMINI_API_KEY = "AIzaSyBaSmhZGePpdVPFdwHOaCmxAot4pTDXCto";  // <-- metti la tua chiave Gemini qui
+const GEMINI_API_KEY = "INCOLLA_QUI_LA_TUA_CHIAVE";  // <-- metti la tua chiave Gemini qui
 
 function AIPanel({ session, athlete, onApplyAI }) {
   const [loading, setLoading]   = useState(false);
@@ -132,7 +132,7 @@ Valuta solo ciò che è visibile dalla vista ${selView}.`;
     try {
       const b64 = photo.split(",")[1];
       const mt  = photo.startsWith("data:image/png") ? "image/png" : "image/jpeg";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
       const resp = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
