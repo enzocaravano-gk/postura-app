@@ -151,19 +151,53 @@ async function exportPDF(athlete, sess) {
     doc.text(doc.splitTextToSize(sess.notes,CW-6).slice(0,3),M+3,y+11); y+=26;
   }
 
-  // pagina 2 foto
+  // pagina 2 — 4 colonne foto strette e alte, A4 verticale
   const pvs=VIEWS.filter(v=>sess.photos?.[v]);
   if(pvs.length){
     doc.addPage();
+    // header
     doc.setFillColor(...blue); doc.rect(0,0,W,14,"F");
     doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(10);
-    doc.text("SPORTHUB · ANALISI FOTOGRAFICA",M,9.5);
-    const iW=(CW-4)/2, iH=iW*1.35;
-    for(let i=0;i<pvs.length;i++){
-      const v=pvs[i],c2=i%2,r2=Math.floor(i/2),fx=M+c2*(iW+4),fy=20+r2*(iH+14);
-      doc.setFillColor(240,245,255); doc.roundedRect(fx,fy,iW,8,2,2,"F");
-      doc.setTextColor(...dark); doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.text(VLBL[v],fx+3,fy+5.5);
-      try{ const cmp=await compress(sess.photos[v],600); doc.addImage(cmp,"JPEG",fx,fy+8,iW,iH,undefined,"FAST"); }catch{}
+    doc.text("SPORTHUB · ANALISI FOTOGRAFICA POSTURALE",M,9.5);
+    if(athlete){ doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.text(`${athlete.surname||""} ${athlete.name||""}`,W-M,9.5,{align:"right"}); }
+
+    // 4 colonne affiancate — strette e alte come nell'app
+    const GAP=3;                          // mm gap tra colonne
+    const colW=(CW-GAP*3)/4;             // ~43mm larghezza
+    const lblH=8;                         // mm etichetta
+    const imgH=colW*2.2;                  // ~95mm altezza — ritratto stretto
+    const startY=20;
+
+    // tutte e 4 le viste sempre nella stessa posizione (anche se foto mancante)
+    VIEWS.forEach((v,i)=>{
+      const fx=M+i*(colW+GAP);
+      const fy=startY;
+      // etichetta colorata
+      const vcol={front:[37,99,235],back:[139,92,246],dx:[16,185,129],sx:[245,158,11]}[v]||blue;
+      doc.setFillColor(...vcol); doc.roundedRect(fx,fy,colW,lblH,2,2,"F");
+      doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(7.5);
+      doc.text(VLBL[v],fx+colW/2,fy+5.5,{align:"center"});
+      // foto o placeholder
+      if(sess.photos?.[v]){
+        try{
+          // compress sincrono — già awaited fuori
+        }catch{}
+      }
+      // box foto
+      doc.setFillColor(10,14,26); doc.roundedRect(fx,fy+lblH,colW,imgH,0,0,"F");
+      doc.setDrawColor(...vcol); doc.setLineWidth(0.3); doc.roundedRect(fx,fy,colW,lblH+imgH,2,2,"S");
+    });
+
+    // aggiungi le foto (async loop separato)
+    for(let i=0;i<VIEWS.length;i++){
+      const v=VIEWS[i];
+      if(!sess.photos?.[v]) continue;
+      const fx=M+i*(colW+GAP);
+      const fy=startY+lblH;
+      try{
+        const cmp=await compress(sess.photos[v],400);
+        doc.addImage(cmp,"JPEG",fx,fy,colW,imgH,undefined,"FAST");
+      }catch{}
     }
   }
 
