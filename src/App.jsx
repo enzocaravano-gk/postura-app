@@ -107,23 +107,19 @@ function CheckSlider({ check, value, onChange }) {
   );
 }
 
-const GEMINI_KEY_STORAGE = "sp_gemini_key";
+const GEMINI_API_KEY = "INCOLLA_QUI_LA_TUA_CHIAVE";  // <-- metti la tua chiave Gemini qui
 
 function AIPanel({ session, athlete, onApplyAI }) {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
   const [result, setResult]     = useState(session.aiAnalysis || null);
   const [selView, setSelView]   = useState("front");
-  const [apiKey, setApiKey]     = useState(() => localStorage.getItem(GEMINI_KEY_STORAGE) || "");
-  const [showKey, setShowKey]   = useState(false);
   const urgColor = (u) => u === "alta" ? "#f87171" : u === "media" ? "#fb923c" : "#4ade80";
-
-  const saveKey = (k) => { setApiKey(k); localStorage.setItem(GEMINI_KEY_STORAGE, k); };
 
   const runAI = async () => {
     const photo = session.photos?.[selView];
     if (!photo) { setError("Nessuna foto per la vista selezionata."); return; }
-    if (!apiKey.trim()) { setError("Inserisci la tua chiave API Gemini prima di continuare."); return; }
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "INCOLLA_QUI_LA_TUA_CHIAVE") { setError("Chiave API non configurata. Apri App.jsx e inserisci la tua chiave Gemini."); return; }
     setLoading(true); setError(null);
     const ctx = athlete ? `Atleta: ${athlete.name} ${athlete.surname}, sport: ${athlete.sport || "N/D"}, ruolo: ${athlete.ruolo || "portiere"}.` : "";
     const prompt = `Sei un esperto di analisi posturale sportiva. Analizza questa foto posturale (vista: ${VIEW_LABELS[selView]}) e restituisci SOLO JSON valido, senza markdown, senza backtick, senza testo aggiuntivo.
@@ -136,7 +132,7 @@ Valuta solo ciò che è visibile dalla vista ${selView}.`;
     try {
       const b64 = photo.split(",")[1];
       const mt  = photo.startsWith("data:image/png") ? "image/png" : "image/jpeg";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
       const resp = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -166,25 +162,7 @@ Valuta solo ciò che è visibile dalla vista ${selView}.`;
         {result && <div style={{ marginLeft: "auto", padding: "4px 12px", borderRadius: 50, background: `${urgColor(result.urgency)}20`, color: urgColor(result.urgency), border: `1px solid ${urgColor(result.urgency)}40`, fontSize: 11, fontWeight: 800, letterSpacing: 1 }}>Urgenza: {result.urgency}</div>}
       </div>
 
-      {/* Chiave API Gemini */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 14px" }}>
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(150,180,255,0.45)", whiteSpace: "nowrap" }}>🔑 Gemini Key</span>
-        <input
-          type={showKey ? "text" : "password"}
-          value={apiKey}
-          onChange={e => saveKey(e.target.value)}
-          placeholder="Incolla la tua chiave (AIza...)"
-          style={{ ...inputSt, flex: 1, borderRadius: 8, padding: "6px 12px", fontSize: 12, background: "rgba(255,255,255,0.04)" }}
-        />
-        <BtnGhost onClick={() => setShowKey(s => !s)} style={{ padding: "4px 10px", fontSize: 11, flexShrink: 0 }}>{showKey ? "🙈" : "👁"}</BtnGhost>
-        {!apiKey && (
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
-            style={{ fontSize: 11, color: "#93c5fd", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 700 }}>
-            Ottieni gratis →
-          </a>
-        )}
-        {apiKey && <span style={{ fontSize: 10, color: "#4ade80", whiteSpace: "nowrap" }}>✓ Salvata</span>}
-      </div>
+
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
         {POSTURE_VIEWS.map(v => (
           <button key={v} onClick={() => setSelView(v)} style={{ padding: "5px 14px", borderRadius: 50, border: `1px solid ${selView === v ? "rgba(59,130,246,0.5)" : "rgba(255,255,255,0.1)"}`, background: selView === v ? "rgba(59,130,246,0.2)" : "rgba(255,255,255,0.04)", color: selView === v ? "#93c5fd" : "rgba(180,200,255,0.5)", fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all .2s" }}>
