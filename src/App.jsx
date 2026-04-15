@@ -107,7 +107,7 @@ function CheckSlider({ check, value, onChange }) {
   );
 }
 
-const GEMINI_API_KEY = "INCOLLA_QUI_LA_TUA_CHIAVE";  // <-- metti la tua chiave Gemini qui
+const GEMINI_API_KEY = "AIzaSyBaSmhZGePpdVPFdwHOaCmxAot4pTDXCto";  // <-- metti la tua chiave Gemini qui
 
 function AIPanel({ session, athlete, onApplyAI }) {
   const [loading, setLoading]   = useState(false);
